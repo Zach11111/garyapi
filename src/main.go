@@ -36,19 +36,18 @@ func getRandomLineFromFile(filePath string) (string, error) {
 		return "", err
 	}
 
-	var quotes []string
-	err = json.Unmarshal(file, &quotes)
+	var lines []string
+	err = json.Unmarshal(file, &lines)
 	if err != nil {
 		return "", err
 	}
 
-	if len(quotes) == 0 {
-		return "", fmt.Errorf("no quotes found")
+	if len(lines) == 0 {
+		return "", fmt.Errorf("no lines found")
 	}
-	rand.Seed(time.Now().UnixNano())
-	randomQuote := quotes[rand.Intn(len(quotes))]
+	randomLine := lines[rand.Intn(len(lines))]
 
-	return randomQuote, nil
+	return randomLine, nil
 }
 
 func main() {
@@ -86,7 +85,7 @@ func main() {
 	})
 
 	r.GET("/quote", func(c *gin.Context) {
-		quote, err := getRandomLineFromFile("./json/quotes.json")
+		quote, err := getRandomLineFromFile("./json/lines.json")
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
