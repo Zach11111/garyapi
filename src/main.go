@@ -75,17 +75,17 @@ func main() {
 	})
 
 	r.GET("/gary", func(c *gin.Context) {
-		url := "https://cdn.garybot.dev/" + randomGary()
+		url := os.Getenv("GARYURL") + randomGary()
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	})
 	
 	r.GET("/goober", func(c *gin.Context) {
-		url := "https://goober.garybot.dev/" + randomGoober()
+		url := os.Getenv("GOOBERURL") + randomGoober()
 		c.JSON(http.StatusOK, gin.H{"url": url})
 	})
 
 	r.GET("/quote", func(c *gin.Context) {
-		quote, err := getRandomLineFromFile("./json/lines.json")
+		quote, err := getRandomLineFromFile("./json/quotes.json")
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
