@@ -20,7 +20,7 @@ const (
 	defaultGaryImg   = "Gary76.jpg"
 	defaultGooberImg = "goober8.jpg"
 	jsonDir          = "./json"
-	quotesFile       = "lines.json"
+	quotesFile       = "quotes.json"
 	jokesFile        = "jokes.json"
 )
 
@@ -77,7 +77,18 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{filepath.Base(filePath): line})
+
+		var key string
+		switch filepath.Base(filePath) {
+		case quotesFile:
+			key = "quote"
+		case jokesFile:
+			key = "joke"
+		default:
+			key = "line"
+		}
+
+		c.JSON(http.StatusOK, gin.H{key: line})
 	}
 }
 
