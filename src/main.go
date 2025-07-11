@@ -14,14 +14,8 @@ import (
 )
 
 const (
-	publicDir        = "./public"
-	garyDir          = "Gary"
-	gooberDir        = "Goober"
 	defaultGaryImg   = "Gary76.jpg"
 	defaultGooberImg = "goober8.jpg"
-	jsonDir          = "./json"
-	quotesFile       = "quotes.json"
-	jokesFile        = "jokes.json"
 )
 
 func getFileNameFromDir(dirPath, defaultName string) string {
@@ -53,14 +47,14 @@ func getRandomLineFromFile(filePath string) (string, error) {
 func serveRandomImageHandler(imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
-		filePath := filepath.Join(publicDir, imageDir, getFileNameFromDir(filepath.Join(publicDir, imageDir), defaultImage))
+		filePath := filepath.Join(imageDir, getFileNameFromDir(imageDir, defaultImage))
 		c.File(filePath)
 	}
 }
 
 func serveImageURLHandler(baseURL, imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		imageName := getFileNameFromDir(filepath.Join(publicDir, imageDir), defaultImage)
+		imageName := getFileNameFromDir(imageDir, defaultImage)
 		cleanBaseURL := baseURL
 		if len(cleanBaseURL) > 0 && cleanBaseURL[len(cleanBaseURL)-1] == '/' {
 			cleanBaseURL = cleanBaseURL[:len(cleanBaseURL)-1]
@@ -80,9 +74,9 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 
 		var key string
 		switch filepath.Base(filePath) {
-		case quotesFile:
+		case filepath.Base(os.Getenv("QUOTES_FILE")):
 			key = "quote"
-		case jokesFile:
+		case filepath.Base(os.Getenv("JOKES_FILE")):
 			key = "joke"
 		default:
 			key = "line"
@@ -100,8 +94,13 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	r.Static("/Gary", filepath.Join(publicDir, garyDir))
-	r.Static("/Goober", filepath.Join(publicDir, gooberDir))
+	garyDir := os.Getenv("GARY_DIR")
+	gooberDir := os.Getenv("GOOBER_DIR")
+	quotesPath := os.Getenv("QUOTES_FILE")
+	jokesPath := os.Getenv("JOKES_FILE")
+
+	r.Static("/Gary", garyDir)
+	r.Static("/Goober", gooberDir)
 
 	imageRoutes := r.Group("/")
 	{
@@ -116,8 +115,8 @@ func main() {
 
 		apiRoutes.GET("/gary", serveImageURLHandler(garyBaseURL, garyDir, defaultGaryImg))
 		apiRoutes.GET("/goober", serveImageURLHandler(gooberBaseURL, gooberDir, defaultGooberImg))
-		apiRoutes.GET("/quote", serveRandomLineHandler(filepath.Join(jsonDir, quotesFile)))
-		apiRoutes.GET("/joke", serveRandomLineHandler(filepath.Join(jsonDir, jokesFile)))
+		apiRoutes.GET("/quote", serveRandomLineHandler(quotesPath))
+		apiRoutes.GET("/joke", serveRandomLineHandler(jokesPath))
 	}
 
 	port := os.Getenv("PORT")
