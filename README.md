@@ -69,3 +69,9 @@ go run main.go
 ```
 
 Make sure your environment variables and file paths are properly set up before launching.
+
+---
+
+## Contributing
+
+Feel free to open issues or submit pull requests for improvements or bug fixes.
