@@ -104,8 +104,8 @@ func main() {
 
 	imageRoutes := r.Group("/")
 	{
-		imageRoutes.GET("/gary/image", serveRandomImageHandler(garyDir, defaultGaryImg))
-		imageRoutes.GET("/goober/image", serveRandomImageHandler(gooberDir, defaultGooberImg))
+		imageRoutes.GET("/gary/image/*path", serveRandomImageHandler(garyDir, defaultGaryImg))
+		imageRoutes.GET("/goober/image/*path", serveRandomImageHandler(gooberDir, defaultGooberImg))
 	}
 
 	apiRoutes := r.Group("/")
