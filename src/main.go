@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -18,12 +19,13 @@ const (
 	defaultGooberImg = "goober8.jpg"
 )
 
-func getFileNameFromDir(dirPath, defaultName string) string {
+func getFileNameFromDir(dirPath, defaultName string, seed int64) string {
 	files, err := os.ReadDir(dirPath)
 	if err != nil || len(files) == 0 {
 		return defaultName
 	}
-	return files[rand.Intn(len(files))].Name()
+
+	return files[rand.New(rand.NewSource(seed)).Intn(len(files))].Name()
 }
 
 func getRandomLineFromFile(filePath string) (string, error) {
@@ -46,15 +48,23 @@ func getRandomLineFromFile(filePath string) (string, error) {
 
 func serveRandomImageHandler(imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var seed int64 = 0
+		for _, c := range strings.TrimPrefix(c.Param("path"), "/") {
+			seed += int64(c)
+		}
+		if seed == 0 {
+			seed = int64(rand.Int())
+		}
+
 		c.Header("Cache-Control", "no-store")
-		filePath := filepath.Join(imageDir, getFileNameFromDir(imageDir, defaultImage))
+		filePath := filepath.Join(imageDir, getFileNameFromDir(imageDir, defaultImage, seed))
 		c.File(filePath)
 	}
 }
 
 func serveImageURLHandler(baseURL, imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		imageName := getFileNameFromDir(imageDir, defaultImage)
+		imageName := getFileNameFromDir(imageDir, defaultImage, int64(rand.Int()))
 		cleanBaseURL := baseURL
 		if len(cleanBaseURL) > 0 && cleanBaseURL[len(cleanBaseURL)-1] == '/' {
 			cleanBaseURL = cleanBaseURL[:len(cleanBaseURL)-1]
