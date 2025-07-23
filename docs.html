@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gary & Goober API Documentation</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #64748b;
+      --success-color: #059669;
+      --background-light: #f8fafc;
+      --border-color: #e2e8f0;
+      --text-muted: #64748b;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      color: #334155;
+      background-color: #ffffff;
+    }
+
+    .navbar {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+      box-shadow: 0 2px 20px rgba(37, 99, 235, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, var(--background-light) 0%, #ffffff 100%);
+      padding: 4rem 0 3rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .hero-title {
+      font-weight: 800;
+      color: #1e293b;
+      margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .endpoint-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .endpoint-card:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .endpoint-header {
+      background: var(--background-light);
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .endpoint-title {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .method-badge {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .endpoint-path {
+      font-family: 'SF Mono', Monaco, monospace;
+      color: #1e293b;
+      background: rgba(37, 99, 235, 0.08);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .endpoint-body {
+      padding: 1.5rem;
+    }
+
+    .endpoint-description {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+
+    .response-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-label {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    pre {
+      background: #1e293b !important;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .live-response {
+      background: var(--background-light);
+      border: 1px solid var(--border-color);
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      margin-top: 0.75rem;
+      min-height: 2.5rem;
+      color: #1e293b;
+    }
+
+    .btn-try {
+      background: var(--success-color);
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-try:hover {
+      background: #047857;
+      transform: translateY(-1px);
+    }
+
+    .img-preview {
+      margin-top: 1rem;
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .api-info {
+      background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .api-info h5 {
+      color: var(--primary-color);
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .base-url {
+      font-family: 'SF Mono', Monaco, monospace;
+      background: rgba(37, 99, 235, 0.1);
+      padding: 0.5rem 0.8rem;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--success-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success-color);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .footer {
+      background: var(--background-light);
+      border-top: 1px solid var(--border-color);
+      padding: 2rem 0;
+      margin-top: 4rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="#">
+      <i class="bi bi-code-square"></i>
+      Gary & Goober API
+    </a>
+    <div class="status-indicator">
+      <div class="status-dot"></div>
+      API Online
+    </div>
+  </div>
+</nav>
+
+<div class="hero-section">
+  <div class="container">
+    <h1 class="hero-title">Gary & Goober API Documentation</h1>
+    <p class="hero-subtitle">A RESTful API providing random images, quotes, and jokes with structured JSON responses</p>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="api-info">
+    <h5><i class="bi bi-info-circle"></i> API Information</h5>
+    <p class="mb-2"><strong>Base URL:</strong> <span class="base-url">https://api.garythe.cat</span></p>
+    <p class="mb-0">All endpoints return JSON responses unless otherwise specified. Images include extracted numeric IDs from filenames.</p>
+  </div>
+
+  <!-- /gary -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/gary</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Retrieves a random Gary image URL with its extracted numeric identifier from the filename.
+      </p>
+      
+      <div class="response-section">
+        <div class="section-label">Example Response</div>
+        <pre><code class="language-json">{
+  "url": "https://api.garythe.cat/Gary/Gary76.jpg",
+  "number": 76
+}</code></pre>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="fetchExample('/gary', 'garyResponse')">
+          <i class="bi bi-play-fill"></i> Try it out
+        </button>
+      </div>
+      <div id="garyResponse" class="live-response"></div>
+    </div>
+  </div>
+
+  <!-- /gary/image -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/gary/image</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Returns a random Gary image directly as binary JPEG data for immediate display or download.
+      </p>
+      
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="loadImage('/gary/image', 'garyImage')">
+          <i class="bi bi-image"></i> Load Preview
+        </button>
+      </div>
+      <div><img id="garyImage" class="img-preview" src="" alt="Click 'Load Preview' to see image" style="display: none;" /></div>
+    </div>
+  </div>
+
+  <!-- /goober -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/goober</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Retrieves a random Goober image URL with its extracted numeric identifier from the filename.
+      </p>
+      
+      <div class="response-section">
+        <div class="section-label">Example Response</div>
+        <pre><code class="language-json">{
+  "url": "https://api.garythe.cat/Goober/goober8.jpg",
+  "number": 8
+}</code></pre>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="fetchExample('/goober', 'gooberResponse')">
+          <i class="bi bi-play-fill"></i> Try it out
+        </button>
+      </div>
+      <div id="gooberResponse" class="live-response"></div>
+    </div>
+  </div>
+
+  <!-- /goober/image -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/goober/image</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Returns a random Goober image directly as binary JPEG data for immediate display or download.
+      </p>
+      
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="loadImage('/goober/image', 'gooberImage')">
+          <i class="bi bi-image"></i> Load Preview
+        </button>
+      </div>
+      <div><img id="gooberImage" class="img-preview" src="" alt="Click 'Load Preview' to see image" style="display: none;" /></div>
+    </div>
+  </div>
+
+  <!-- /quote -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/quote</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Retrieves a random inspirational quote from the configured quote collection.
+      </p>
+      
+      <div class="response-section">
+        <div class="section-label">Example Response</div>
+        <pre><code class="language-json">{
+  "quote": "Be yourself; everyone else is already taken."
+}</code></pre>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="fetchExample('/quote', 'quoteResponse')">
+          <i class="bi bi-play-fill"></i> Try it out
+        </button>
+      </div>
+      <div id="quoteResponse" class="live-response"></div>
+    </div>
+  </div>
+
+  <!-- /joke -->
+  <div class="endpoint-card">
+    <div class="endpoint-header">
+      <h4 class="endpoint-title">
+        <span class="method-badge">GET</span>
+        <span class="endpoint-path">/joke</span>
+      </h4>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-description">
+        Retrieves a random joke from the collection for entertainment purposes.
+      </p>
+      
+      <div class="response-section">
+        <div class="section-label">Example Response</div>
+        <pre><code class="language-json">{
+  "joke": "Why don't scientists trust atoms? Because they make up everything!"
+}</code></pre>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-try text-white" onclick="fetchExample('/joke', 'jokeResponse')">
+          <i class="bi bi-play-fill"></i> Try it out
+        </button>
+      </div>
+      <div id="jokeResponse" class="live-response"></div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p class="mb-0">Gary & Goober API Documentation • Built with ❤️</p>
+  </div>
+</footer>
+
+<script>
+function fetchExample(endpoint, elementId) {
+  const responseDiv = document.getElementById(elementId);
+  responseDiv.innerHTML = '<div class="loading-spinner"></div> Loading...';
+  
+  fetch('https://api.garythe.cat' + endpoint)
+    .then(res => res.json())
+    .then(data => {
+      responseDiv.textContent = JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+      responseDiv.innerHTML = '<span style="color: #dc2626;">❌ Error: ' + err.message + '</span>';
+    });
+}
+
+function loadImage(endpoint, imgId) {
+  const img = document.getElementById(imgId);
+  const button = event.target;
+  
+  button.innerHTML = '<div class="loading-spinner"></div> Loading...';
+  button.disabled = true;
+  
+  img.style.display = 'none';
+  img.onload = function() {
+    img.style.display = 'block';
+    button.innerHTML = '<i class="bi bi-image"></i> Load Preview';
+    button.disabled = false;
+  };
+  
+  img.onerror = function() {
+    img.alt = 'Failed to load image';
+    button.innerHTML = '<i class="bi bi-image"></i> Load Preview';
+    button.disabled = false;
+  };
+  
+  img.src = 'https://api.garythe.cat' + endpoint + '?' + Date.now();
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+</body>
+</html>

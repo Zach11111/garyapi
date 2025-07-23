@@ -137,6 +137,15 @@ func main() {
 		apiRoutes.GET("/joke", serveRandomLineHandler(jokesPath))
 	}
 
+	// Serve index HTML file from .env INDEX_FILE
+	indexFile := os.Getenv("INDEX_FILE")
+	if indexFile != "" {
+		r.GET("/", func(c *gin.Context) {
+			c.Header("Cache-Control", "no-store")
+			c.File(indexFile)
+		})
+	}
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
