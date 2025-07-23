@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"time"
 	"runtime"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -105,11 +105,20 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 	}
 }
 
+func countFilesInDir(dirPath string) int {
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		fmt.Printf("ERROR reading dir %s: %v\n", dirPath, err)
+		return 0
+	}
+	return len(files)
+}
+
+
 func main() {
 	_ = godotenv.Load()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	rand.Seed(time.Now().UnixNano())
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -137,6 +146,13 @@ func main() {
 		apiRoutes.GET("/goober", serveImageURLHandler(gooberBaseURL, gooberDir, defaultGooberImg))
 		apiRoutes.GET("/quote", serveRandomLineHandler(quotesPath))
 		apiRoutes.GET("/joke", serveRandomLineHandler(jokesPath))
+
+		apiRoutes.GET("/gary/count", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"count": countFilesInDir(garyDir)})
+		})
+		apiRoutes.GET("/goober/count", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"count": countFilesInDir(gooberDir)})
+		})
 	}
 
 	indexFile := os.Getenv("INDEX_FILE")
@@ -155,4 +171,3 @@ func main() {
 		fmt.Printf("Failed to start the server: %v\n", err)
 	}
 }
-
