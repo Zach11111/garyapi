@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"time"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -107,8 +108,9 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 func main() {
 	_ = godotenv.Load()
 
-	rand.Seed(time.Now().UnixNano())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	rand.Seed(time.Now().UnixNano())
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
@@ -137,7 +139,6 @@ func main() {
 		apiRoutes.GET("/joke", serveRandomLineHandler(jokesPath))
 	}
 
-	// Serve index HTML file from .env INDEX_FILE
 	indexFile := os.Getenv("INDEX_FILE")
 	if indexFile != "" {
 		r.GET("/", func(c *gin.Context) {
@@ -154,3 +155,4 @@ func main() {
 		fmt.Printf("Failed to start the server: %v\n", err)
 	}
 }
+
