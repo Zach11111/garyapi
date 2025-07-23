@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -89,8 +89,6 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 func main() {
 	_ = godotenv.Load()
 
-	rand.Seed(time.Now().UnixNano())
-
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
@@ -123,7 +121,8 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+	log.Printf("Starting server on port %s", port)
 	if err := r.Run(":" + port); err != nil {
-		fmt.Printf("Failed to start the server: %v\n", err)
+		log.Fatalf("Failed to start the server: %v", err)
 	}
 }
