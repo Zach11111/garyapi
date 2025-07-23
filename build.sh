@@ -1,0 +1,2 @@
+#!/bin/bash
+go build -o api.exe -ldflags "-s -w" src/main.go

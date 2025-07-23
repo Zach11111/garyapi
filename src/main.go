@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -44,6 +45,17 @@ func getRandomLineFromFile(filePath string) (string, error) {
 	return lines[rand.Intn(len(lines))], nil
 }
 
+func extractNumberFromFilename(filename string) int {
+	re := regexp.MustCompile(`\d+`)
+	match := re.FindString(filename)
+	if match == "" {
+		return 0
+	}
+	var number int
+	fmt.Sscanf(match, "%d", &number)
+	return number
+}
+
 func serveRandomImageHandler(imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
@@ -55,12 +67,18 @@ func serveRandomImageHandler(imageDir, defaultImage string) gin.HandlerFunc {
 func serveImageURLHandler(baseURL, imageDir, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		imageName := getFileNameFromDir(imageDir, defaultImage)
+		number := extractNumberFromFilename(imageName)
+
 		cleanBaseURL := baseURL
 		if len(cleanBaseURL) > 0 && cleanBaseURL[len(cleanBaseURL)-1] == '/' {
 			cleanBaseURL = cleanBaseURL[:len(cleanBaseURL)-1]
 		}
 		url := fmt.Sprintf("%s/%s", cleanBaseURL, imageName)
-		c.JSON(http.StatusOK, gin.H{"url": url})
+
+		c.JSON(http.StatusOK, gin.H{
+			"url":    url,
+			"number": number,
+		})
 	}
 }
 
