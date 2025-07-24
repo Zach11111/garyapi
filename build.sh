@@ -1,2 +1,2 @@
-#!/bin/bash
-go build -o api -ldflags "-s -w" src/main.go
+#!/usr/bin/env bash
+cargo build --release

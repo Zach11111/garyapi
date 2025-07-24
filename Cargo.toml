@@ -1,0 +1,28 @@
+[package]
+name = "garyapi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.0", features = [
+    "rt-multi-thread",
+    "net",
+    "fs",
+    "macros",
+] }
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1", features = ["full"] }
+http-body-util = "0.1"
+serde_json = "1.0"
+fastrand = "2.0"
+dotenvy = "0.15"
+bytes = "1.0"
+ahash = "0.8"
+parking_lot = "0.12"
+async-trait = "0.1"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "abort"

@@ -1,3 +1,6 @@
-.env
-api
-api.exe
+/target
+/jokes.json
+/quotes.json
+/gary_images
+/goober_images
+/.env

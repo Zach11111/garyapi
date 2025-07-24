@@ -1,6 +1,6 @@
 # Gary API
 
-A minimal HTTP API for serving random images of Gary and Goober, as well as quotes and jokes. Built using Go and Gin, this API is designed to be fast and self-contained.
+A minimal HTTP API for serving random images of Gary and Goober, as well as quotes and jokes. Built using Rust and Hyper, this API is designed to be fast and self-contained.
 
 ---
 
@@ -31,7 +31,7 @@ Returns a single line from a JSON array.
 Your `.env` file should define the following:
 
 ```dotenv
-# Port the Go server will run on
+# Port the server will run on
 PORT=3000
 
 # Public URLs for accessing image resources via CDN or static hosting
@@ -65,7 +65,7 @@ Both `quotes.json` and `jokes.json` should be arrays of strings:
 ## Running the Server
 
 ```bash
-go run main.go
+cargo run
 ```
 
 Make sure your environment variables and file paths are properly set up before launching.

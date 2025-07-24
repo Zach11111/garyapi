@@ -1,1 +1,1 @@
-go build -o api.exe -ldflags "-s -w" src/main.go
+cargo build --release
