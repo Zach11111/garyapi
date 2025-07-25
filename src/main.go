@@ -9,8 +9,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -20,12 +22,33 @@ const (
 	defaultGooberImg = "goober8.jpg"
 )
 
-func getFileNameFromDir(dirPath, defaultName string) string {
+var (
+	garyImages   []string
+	gooberImages []string
+	imageCacheMu sync.RWMutex
+)
+
+func cacheFileNames(dirPath string) []string {
 	files, err := os.ReadDir(dirPath)
-	if err != nil || len(files) == 0 {
+	if err != nil {
+		fmt.Printf("Error reading dir %s: %v\n", dirPath, err)
+		return nil
+	}
+
+	names := make([]string, 0, len(files))
+	for _, file := range files {
+		if !file.IsDir() {
+			names = append(names, file.Name())
+		}
+	}
+	return names
+}
+
+func getRandomFileName(images []string, defaultName string) string {
+	if len(images) == 0 {
 		return defaultName
 	}
-	return files[rand.Intn(len(files))].Name()
+	return images[rand.Intn(len(images))]
 }
 
 func getRandomLineFromFile(filePath string) (string, error) {
@@ -57,17 +80,22 @@ func extractNumberFromFilename(filename string) int {
 	return number
 }
 
-func serveRandomImageHandler(imageDir, defaultImage string) gin.HandlerFunc {
+func serveRandomImageHandler(images *[]string, defaultImage, imageDir string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
-		filePath := filepath.Join(imageDir, getFileNameFromDir(imageDir, defaultImage))
-		c.File(filePath)
+		imageCacheMu.RLock()
+		imageName := getRandomFileName(*images, defaultImage)
+		imageCacheMu.RUnlock()
+		c.File(filepath.Join(imageDir, imageName))
 	}
 }
 
-func serveImageURLHandler(baseURL, imageDir, defaultImage string) gin.HandlerFunc {
+func serveImageURLHandler(baseURL, imageDir string, images *[]string, defaultImage string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		imageName := getFileNameFromDir(imageDir, defaultImage)
+		imageCacheMu.RLock()
+		imageName := getRandomFileName(*images, defaultImage)
+		imageCacheMu.RUnlock()
+
 		number := extractNumberFromFilename(imageName)
 
 		cleanBaseURL := baseURL
@@ -105,15 +133,41 @@ func serveRandomLineHandler(filePath string) gin.HandlerFunc {
 	}
 }
 
-func countFilesInDir(dirPath string) int {
-	files, err := os.ReadDir(dirPath)
+func startDirectoryWatcher(dir string, cache *[]string, label string) {
+	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		fmt.Printf("ERROR reading dir %s: %v\n", dirPath, err)
-		return 0
+		fmt.Printf("Failed to create watcher for %s: %v\n", label, err)
+		return
 	}
-	return len(files)
-}
+	err = watcher.Add(dir)
+	if err != nil {
+		fmt.Printf("Failed to watch directory %s: %v\n", dir, err)
+		return
+	}
 
+	go func() {
+		defer watcher.Close()
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&(fsnotify.Create|fsnotify.Remove|fsnotify.Rename) != 0 {
+					imageCacheMu.Lock()
+					*cache = cacheFileNames(dir)
+					imageCacheMu.Unlock()
+					fmt.Printf("[%s] Cache updated due to event: %s\n", label, event)
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				fmt.Printf("[%s] Watcher error: %v\n", label, err)
+			}
+		}
+	}()
+}
 
 func main() {
 	_ = godotenv.Load()
@@ -128,13 +182,19 @@ func main() {
 	quotesPath := os.Getenv("QUOTES_FILE")
 	jokesPath := os.Getenv("JOKES_FILE")
 
+	garyImages = cacheFileNames(garyDir)
+	gooberImages = cacheFileNames(gooberDir)
+
+	startDirectoryWatcher(garyDir, &garyImages, "Gary")
+	startDirectoryWatcher(gooberDir, &gooberImages, "Goober")
+
 	r.Static("/Gary", garyDir)
 	r.Static("/Goober", gooberDir)
 
 	imageRoutes := r.Group("/")
 	{
-		imageRoutes.GET("/gary/image/*path", serveRandomImageHandler(garyDir, defaultGaryImg))
-		imageRoutes.GET("/goober/image/*path", serveRandomImageHandler(gooberDir, defaultGooberImg))
+		imageRoutes.GET("/gary/image/*path", serveRandomImageHandler(&garyImages, defaultGaryImg, garyDir))
+		imageRoutes.GET("/goober/image/*path", serveRandomImageHandler(&gooberImages, defaultGooberImg, gooberDir))
 	}
 
 	apiRoutes := r.Group("/")
@@ -142,16 +202,22 @@ func main() {
 		garyBaseURL := os.Getenv("GARYURL")
 		gooberBaseURL := os.Getenv("GOOBERURL")
 
-		apiRoutes.GET("/gary", serveImageURLHandler(garyBaseURL, garyDir, defaultGaryImg))
-		apiRoutes.GET("/goober", serveImageURLHandler(gooberBaseURL, gooberDir, defaultGooberImg))
+		apiRoutes.GET("/gary", serveImageURLHandler(garyBaseURL, garyDir, &garyImages, defaultGaryImg))
+		apiRoutes.GET("/goober", serveImageURLHandler(gooberBaseURL, gooberDir, &gooberImages, defaultGooberImg))
 		apiRoutes.GET("/quote", serveRandomLineHandler(quotesPath))
 		apiRoutes.GET("/joke", serveRandomLineHandler(jokesPath))
 
 		apiRoutes.GET("/gary/count", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"count": countFilesInDir(garyDir)})
+			imageCacheMu.RLock()
+			count := len(garyImages)
+			imageCacheMu.RUnlock()
+			c.JSON(http.StatusOK, gin.H{"count": count})
 		})
 		apiRoutes.GET("/goober/count", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"count": countFilesInDir(gooberDir)})
+			imageCacheMu.RLock()
+			count := len(gooberImages)
+			imageCacheMu.RUnlock()
+			c.JSON(http.StatusOK, gin.H{"count": count})
 		})
 	}
 
